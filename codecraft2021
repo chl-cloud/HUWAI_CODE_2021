@@ -1,0 +1,259 @@
+#success 单一型号贪心,数据集不可见可用
+def yuesu(cpuA,cpuB,neicunA,neicunB,xinghao,xuniji):
+    """
+    容量约束
+    :param cpuA:
+    :param cpuB:
+    :param neicunA:
+    :param neicunB:
+    :param xinghao:
+    :param xuniji:
+    :return: bool
+    """
+    temp_cpu=xuniji[xinghao]['cpu']
+    temp_neicun=xuniji[xinghao]['neicun']
+    if xuniji[xinghao]['bushu']==0:
+        if (cpuA>=temp_cpu and neicunA>=temp_neicun) or (cpuB>=temp_cpu and neicunB>=temp_neicun):
+            return False
+        else:
+            return True
+    else:
+        if cpuA>=(temp_cpu/2) and neicunA>=(temp_neicun/2) and cpuB>=(temp_cpu/2) and neicunB>=(temp_neicun/2):
+            return False
+        else:
+            return True
+
+
+def request():
+    """
+    请求序列
+    :return: request_xulie
+    """
+    request_xulie = []
+    T = int(input())  # 1<=T<=1000,表示T天用户请求
+    for _ in range(T):
+        day_request = []
+        R = int(input())  # 当天R条请求
+        for _ in range(R):
+            temp = input().strip()
+            day_request.append(temp)
+        request_xulie.append(day_request)
+    return request_xulie
+
+def data_add(fuwuqi,xh):
+    """
+    数据中心扩容
+    """
+    xinghao=xh
+    cpuA=fuwuqi[xinghao]['cpu']/2
+    cpuB=fuwuqi[xinghao]['cpu']/2
+    neicunA=fuwuqi[xinghao]['neicun']/2
+    neicunB=fuwuqi[xinghao]['neicun']/2
+    return cpuA,cpuB,neicunA,neicunB
+
+def xuniji_qianyi():
+    """
+    虚拟机迁移
+    """
+    pass
+
+def bushu_xuniji(xinghao,xuniji,fwq_ID,cpuA,neicunA,cpuB,neicunB):
+    """
+    部署虚拟机
+    :param xinghao:
+    :param xuniji:
+    :param fwq_ID:
+    :param cpuA:
+    :param neicunA:
+    :param cpuB:
+    :param neicunB:
+    :return: cpuA,cpuB,neicunA,neicunB,bushu
+    """
+    #单节点部署，考虑选A还是B
+    if xuniji[xinghao]['bushu']==0:
+        if (cpuA-xuniji[xinghao]['cpu']>=0) and (neicunA-xuniji[xinghao]['neicun']>=0):
+            bushu=(fwq_ID,'A')
+            cpuA=cpuA-xuniji[xinghao]['cpu']
+            neicunA=neicunA-xuniji[xinghao]['neicun']
+        else:
+            bushu=(fwq_ID,'B')
+            cpuB = cpuB - xuniji[xinghao]['cpu']
+            neicunB = neicunB - xuniji[xinghao]['neicun']
+    #双节点部署
+    else:
+        bushu=(fwq_ID)
+        cpuA = cpuA - xuniji[xinghao]['cpu']/2
+        neicunA = neicunA - xuniji[xinghao]['neicun']/2
+        cpuB = cpuB - xuniji[xinghao]['cpu']/2
+        neicunB = neicunB - xuniji[xinghao]['neicun']/2
+    return cpuA,cpuB,neicunA,neicunB,bushu
+
+def anlaysis_request(request_xulie):
+    """
+    解析请求序列
+    :param request_xulie:
+    :return: request_kind,xinghao_list
+    """
+    request_kind=[]
+    xinghao_list=[]
+    for i in range(len(request_xulie)):
+        request_kind_day=[]
+        xinghao_list_day=[]
+        for j in range(len(request_xulie[i])):
+            temp=request_xulie[i][j]
+            temp = temp.replace('(', '')
+            temp = temp.replace(')', '')
+            temp_list = temp.split(', ')
+            add_or_del=temp_list[0]
+            xinghao = temp_list[1]
+            request_kind_day.append(add_or_del)
+            xinghao_list_day.append(xinghao)
+        request_kind.append(request_kind_day)
+        xinghao_list.append(xinghao_list_day)
+    return request_kind,xinghao_list
+
+def bushu_cost(xinghao,xuniji,cpuA,neicunA,cpuB,neicunB):
+    # 单节点部署，考虑选A还是B
+    if xuniji[xinghao]['bushu'] == 0:
+        if (cpuA - xuniji[xinghao]['cpu'] >= 0) and (neicunA - xuniji[xinghao]['neicun'] >= 0):
+            cpuA = cpuA - xuniji[xinghao]['cpu']
+            neicunA = neicunA - xuniji[xinghao]['neicun']
+        else:
+            cpuB = cpuB - xuniji[xinghao]['cpu']
+            neicunB = neicunB - xuniji[xinghao]['neicun']
+    # 双节点部署
+    else:
+        cpuA = cpuA - xuniji[xinghao]['cpu'] / 2
+        neicunA = neicunA - xuniji[xinghao]['neicun'] / 2
+        cpuB = cpuB - xuniji[xinghao]['cpu'] / 2
+        neicunB = neicunB - xuniji[xinghao]['neicun'] / 2
+    return cpuA, cpuB, neicunA, neicunB
+
+
+def main():
+    #参数初始化
+    fuwuqi= {}
+    xuniji={}
+
+    #获取服务器类型
+    N = int(input())  # 1<=N<=100,可以采购的服务器类型量
+    for _ in range(N):
+        temp = input().strip()
+        temp = temp.replace('(', '')
+        temp = temp.replace(')', '')
+        temp_list = temp.split(',')
+        xinghao = temp_list[0]
+        cpu = int(temp_list[1])
+        neicun = int(temp_list[2])
+        chengbeng = int(temp_list[3])
+        haoneng = int(temp_list[4])
+        fuwuqi[xinghao] = {}
+        fuwuqi[xinghao]['cpu'] = cpu
+        fuwuqi[xinghao]['neicun']=neicun
+        fuwuqi[xinghao]['chengbeng']=chengbeng
+        fuwuqi[xinghao]['haoneng'] = haoneng
+    #获取虚拟机类型
+    M = int(input())  # 1<=M<=1000,售卖的虚拟机类型数量
+    for _ in range(M):
+        temp = input().strip()
+        temp = temp.replace('(', '')
+        temp = temp.replace(')', '')
+        temp_list = temp.split(',')
+        xinghao = temp_list[0]
+        cpu = int(temp_list[1])
+        neicun = int(temp_list[2])
+        bushu = int(temp_list[3])
+        xuniji[xinghao] = {}
+        xuniji[xinghao]['cpu'] = cpu
+        xuniji[xinghao]['neicun'] = neicun
+        xuniji[xinghao]['bushu'] = bushu
+
+    #获取用户请求
+    request_xulie=request()
+    #初始化服务器ID号,数据中心容量
+    fwq_ID=-1
+    cpuA, cpuB, neicunA, neicunB = 0, 0, 0, 0
+
+    #解析用户请求
+    request_kind,xinghao_list=anlaysis_request(request_xulie)
+    #找出当天单个虚拟机所需最大cpu和内存（一个节点）
+    for i in range(len(xinghao_list)):
+        cost=500000000000
+        max_cpu=0
+        max_neicun=0
+        for k in range(len(xinghao_list[i])):
+            if request_kind[i][k]=='add':
+                if xuniji[xinghao_list[i][k]]['bushu']==1:
+                    max_cpu=max(max_cpu,xuniji[xinghao_list[i][k]]['cpu']/2)
+                    max_neicun=max(max_neicun,xuniji[xinghao_list[i][k]]['neicun']/2)
+                else:
+                    max_cpu = max(max_cpu, xuniji[xinghao_list[i][k]]['cpu'])
+                    max_neicun = max(max_neicun, xuniji[xinghao_list[i][k]]['neicun'])
+
+        #寻找局部最优，每天选择一种服务器使当天成本最低
+
+        for xh in list(fuwuqi.keys()):
+            number=0
+            cpu_A, cpu_B, neicun_A, neicun_B = 0, 0, 0, 0
+            for j in range(len(xinghao_list[i])):
+                add_or_del=request_kind[i][j]
+                xinghao=xinghao_list[i][j]
+                if add_or_del=='add':
+                    if yuesu(cpu_A,cpu_B,neicun_A,neicun_B,xinghao,xuniji):
+                        cpu_A,cpu_B,neicun_A,neicun_B=data_add(fuwuqi,xh)
+                        number=number+1
+                    cpu_A,cpu_B,neicun_A,neicun_B=bushu_cost(xinghao,xuniji,cpu_A,neicun_A,cpu_B,neicun_B)
+                else:
+                    xuniji_qianyi()
+            if cpu_A>=0 and cpu_B>=0 and neicun_A>=0 and neicun_B>=0 and fuwuqi[xh]['cpu']>=2*max_cpu and fuwuqi[xh]['neicun']>=2*max_neicun:
+                temp=fuwuqi[xh]['chengbeng']*number
+                if temp<cost:
+                    fuwuqi_xh=xh
+                    cost=temp
+        #保存决策信息
+        number=0
+        day_xuniji_bs=[]
+        for j in range(len(xinghao_list[i])):
+            add_or_del = request_kind[i][j]
+            xinghao = xinghao_list[i][j]
+            if add_or_del == 'add':
+                if yuesu(cpuA, cpuB, neicunA, neicunB, xinghao, xuniji):
+                    cpuA, cpuB, neicunA, neicunB = data_add(fuwuqi,fuwuqi_xh)
+                    fwq_ID = fwq_ID + 1
+                    number = number + 1
+                cpuA, cpuB, neicunA, neicunB, bushu = bushu_xuniji(xinghao, xuniji, fwq_ID, cpuA, neicunA, cpuB,
+                                                                   neicunB)
+                day_xuniji_bs.append(bushu)
+            else:
+                xuniji_qianyi()
+
+        #输出决策信息
+        if number==0:
+            print('%c%s%c %d%c' % ('(', 'purchase', ',', 0, ')'))
+            print('%c%s%c %d%c' % ('(', 'migration', ',', 0, ')'))
+            for i in range(len(day_xuniji_bs)):
+                temp=day_xuniji_bs[i]
+                if type(temp)==int:
+                    print('%c%d%c' % ('(', temp, ')'))
+                else:
+                    fuwuqi_ID=temp[0]
+                    AorB=temp[1]
+                    print('%c%d%c %c%c' % ('(', fuwuqi_ID, ',', AorB, ')'))
+        else:
+            print('%c%s%c %d%c' % ('(', 'purchase', ',', 1, ')'))
+            print('%c%s%c %d%c' % ('(', fuwuqi_xh, ',', number, ')'))
+            print('%c%s%c %d%c' % ('(', 'migration', ',', 0, ')'))
+            for i in range(len(day_xuniji_bs)):
+                temp=day_xuniji_bs[i]
+                if type(temp)==int:
+                    print('%c%d%c' % ('(', temp, ')'))
+                else:
+                    fuwuqi_ID=temp[0]
+                    AorB=temp[1]
+                    print('%c%d%c %c%c' % ('(', fuwuqi_ID, ',', AorB, ')'))
+
+
+
+
+if __name__ == "__main__":
+    main()
